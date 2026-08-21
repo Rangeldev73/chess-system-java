@@ -15,22 +15,23 @@ public class ChessPosition {
         this.row = row;
     }
 
-    public char getColumn() {
+    public char getColumn(){
         return column;
     }
 
-    public int getRow() {
+    public int getRow(){
         return row;
     }
 
-    public Position toPosition() {
+    public Position toPosition(){
         return new Position(8 - row, column - 'a');
     }
 
-    public static ChessPosition fromPosition(Position position) {
+    public static ChessPosition fromPosition(Position position){
         return new ChessPosition((char)('a' + position.column()), 8 - position.row());
     }
 
+    @Override
     public String toString() {
         return "" + column + row;
     }
