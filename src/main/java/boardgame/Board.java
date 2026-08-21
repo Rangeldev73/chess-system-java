@@ -69,4 +69,21 @@ public class Board {
         validatePositionExists(position);
         return thereIsAPiece(position.row(), position.column());
     }
+
+    public Piece removePiece(Position position) {
+        validatePositionExists(position);
+
+        int row = position.row();
+        int column = position.column();
+
+        if (!thereIsAPiece(row, column)) {
+            return null;
+        }
+
+        Piece removedPiece = pieces[row][column];
+        pieces[row][column] = null;
+        removedPiece.setPosition(null);
+
+        return removedPiece;
+    }
 }
