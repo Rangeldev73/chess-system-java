@@ -49,4 +49,21 @@ public abstract class ChessPiece extends Piece {
 
         return mat;
     }
+
+    protected boolean[][] stepMoves(int[][] offsets) {
+        boolean[][] mat = new boolean[getBoard().getRows()][getBoard().getColumns()];
+
+        for (int[] offset : offsets) {
+            Position targetPosition = new Position(
+                    getPosition().row() + offset[0],
+                    getPosition().column() + offset[1]
+            );
+
+            if (canMove(targetPosition)) {
+                mat[targetPosition.row()][targetPosition.column()] = true;
+            }
+        }
+
+        return mat;
+    }
 }
