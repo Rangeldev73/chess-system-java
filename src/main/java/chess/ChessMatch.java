@@ -10,11 +10,17 @@ import chess.pieces.Pawn;
 import chess.pieces.Queen;
 import chess.pieces.Rook;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class ChessMatch {
 
     private final Board board;
     private int turn;
     private Color currentPlayer;
+    private final List<ChessPiece> piecesOnTheBoard = new ArrayList<>();
+    private final List<ChessPiece> capturedPieces = new ArrayList<>();
 
     public ChessMatch() {
         board = new Board(8, 8);
@@ -41,6 +47,12 @@ public class ChessMatch {
         return mat;
     }
 
+    public List<ChessPiece> getCapturedPieces(Color color) {
+        return capturedPieces.stream()
+                .filter(p -> p.getColor() == color)
+                .collect(Collectors.toList());
+    }
+
     public ChessPiece performChessMove(ChessPosition sourcePosition, ChessPosition targetPosition) {
         Position source = sourcePosition.toPosition();
         Position target = targetPosition.toPosition();
@@ -48,17 +60,23 @@ public class ChessMatch {
         validateSourcePosition(source);
         validateTargetPosition(source, target);
 
-        Piece capturedPiece = makeMove(source, target);
+        ChessPiece capturedPiece = makeMove(source, target);
         nextTurn();
 
-        return (ChessPiece) capturedPiece;
+        return capturedPiece;
     }
 
-    private Piece makeMove(Position source, Position target) {
+    private ChessPiece makeMove(Position source, Position target) {
         ChessPiece p = (ChessPiece) board.removePiece(source);
-        Piece capturedPiece = board.removePiece(target);
+        ChessPiece capturedPiece = (ChessPiece) board.removePiece(target);
         board.placePiece(p, target);
         p.increaseMoveCount();
+
+        if (capturedPiece != null) {
+            piecesOnTheBoard.remove(capturedPiece);
+            capturedPieces.add(capturedPiece);
+        }
+
         return capturedPiece;
     }
 
@@ -90,6 +108,7 @@ public class ChessMatch {
 
     private void placeNewPiece(char column, int row, ChessPiece piece) {
         board.placePiece(piece, new ChessPosition(column, row).toPosition());
+        piecesOnTheBoard.add(piece);
     }
 
     private void initialSetup() {
