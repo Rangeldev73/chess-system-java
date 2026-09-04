@@ -8,7 +8,6 @@ import chess.pieces.Knight;
 import chess.pieces.Pawn;
 import chess.pieces.Queen;
 import chess.pieces.Rook;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,6 +18,7 @@ public class ChessMatch {
     private int turn;
     private Color currentPlayer;
     private boolean check;
+    private boolean checkMate;
     private final List<ChessPiece> piecesOnTheBoard = new ArrayList<>();
     private final List<ChessPiece> capturedPieces = new ArrayList<>();
 
@@ -27,6 +27,7 @@ public class ChessMatch {
         turn = 1;
         currentPlayer = Color.WHITE;
         check = false;
+        checkMate = false;
         initialSetup();
     }
 
@@ -36,6 +37,10 @@ public class ChessMatch {
 
     public boolean getCheck() {
         return check;
+    }
+
+    public boolean getCheckMate() {
+        return checkMate;
     }
 
     public Color getCurrentPlayer() {
@@ -59,6 +64,10 @@ public class ChessMatch {
     }
 
     public ChessPiece performChessMove(ChessPosition sourcePosition, ChessPosition targetPosition) {
+        if (checkMate) {
+            throw new ChessException("The match is already in checkmate");
+        }
+
         Position source = sourcePosition.toPosition();
         Position target = targetPosition.toPosition();
 
@@ -74,7 +83,11 @@ public class ChessMatch {
 
         check = testCheck(opponent(currentPlayer));
 
-        nextTurn();
+        if (testCheckMate(opponent(currentPlayer))) {
+            checkMate = true;
+        } else {
+            nextTurn();
+        }
 
         return capturedPiece;
     }
@@ -155,6 +168,39 @@ public class ChessMatch {
             }
         }
         return false;
+    }
+
+    private boolean wouldResolveCheck(Position source, Position target, Color color) {
+        ChessPiece capturedPiece = makeMove(source, target);
+        boolean stillInCheck = testCheck(color);
+        undoMove(source, target, capturedPiece);
+        return !stillInCheck;
+    }
+
+    private boolean testCheckMate(Color color) {
+        if (!testCheck(color)) {
+            return false;
+        }
+
+        List<ChessPiece> list = piecesOnTheBoard.stream()
+                .filter(p -> p.getColor() == color)
+                .collect(Collectors.toList());
+
+        for (ChessPiece p : list) {
+            boolean[][] mat = p.possibleMoves();
+            for (int i = 0; i < board.getRows(); i++) {
+                for (int j = 0; j < board.getColumns(); j++) {
+                    if (mat[i][j]) {
+                        Position source = p.position();
+                        Position target = new Position(i, j);
+                        if (wouldResolveCheck(source, target, color)) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     private void placeNewPiece(char column, int row, ChessPiece piece) {
